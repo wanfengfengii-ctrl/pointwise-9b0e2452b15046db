@@ -1,0 +1,13 @@
+{
+  "expected": {
+    "east": {"before": {"rows": 2, "litres": 18}, "removed_origin_lines": ["2"], "row_delta": -1, "litres_delta": -11, "after": {"rows": 1, "litres": 7}},
+    "west": {"before": {"rows": 1, "litres": 7}, "removed_origin_lines": ["1"], "row_delta": -1, "litres_delta": -7, "after": {"rows": 0, "litres": 0}}
+  },
+  "downstream_expected": {
+    "west_late_status": "late",
+    "west_late_has_receipt": false,
+    "west_after_late": {"rows": 0, "litres": 0},
+    "east_old_origins": [{"record": "北闸/日报-01", "line": "2"}],
+    "east_after_audit": {"rows": 1, "litres": 7}
+  }
+}

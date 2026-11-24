@@ -1,0 +1,16 @@
+{
+  "station": "北闸",
+  "batch": "日报-01",
+  "origin_record": "北闸/日报-01",
+  "stations": ["北闸", "南堤"],
+  "rows": [
+    {"row": "A", "litres": 7, "line": "1"},
+    {"row": "B", "litres": 11, "line": "2"},
+    {"row": "C", "litres": 7, "line": "3"}
+  ],
+  "releases": {"P": [["A"], ["B"]], "Q": [["A"]], "R": [["C"]]},
+  "delivery": {"east": [["P", 0], ["P", 1], ["Q", 0]], "west": [["P", 0]]},
+  "withdraw": "P",
+  "late_west": ["P", 1],
+  "audit_east": ["P", 1]
+}
