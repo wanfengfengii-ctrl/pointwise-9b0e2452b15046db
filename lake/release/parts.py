@@ -1,7 +1,18 @@
 import sqlite3
+from dataclasses import replace
 
+from lake.audit.receipts import HistoryNotFound
 from lake.intake.frozen_store import FrozenFact
+from lake.intake.provenance import require_identifier
 from lake.release.formats import PartFact, PublicationPart, decode_document, encode_document, part_number
+from lake.release.station_parts import (
+    StationPart,
+    StationPartRow,
+    original_digest,
+    station_part_fields,
+    station_part_number,
+    station_part_payload,
+)
 
 
 def prepare_part_store(db: sqlite3.Connection) -> None:
@@ -46,3 +57,38 @@ def read_original_parts(db: sqlite3.Connection, publication_id: str) -> tuple[Pu
             raise ValueError('stored part has the wrong document kind')
         parts.append(part)
     return tuple(parts)
+
+
+def read_original_part(db: sqlite3.Connection, part_id: str) -> PublicationPart | None:
+    row = db.execute('SELECT document FROM original_parts WHERE part_id = ?', (part_id,)).fetchone()
+    if row is None:
+        return None
+    part = decode_document(row[0])
+    if not isinstance(part, PublicationPart):
+        raise ValueError('stored part has the wrong document kind')
+    return part
+
+
+def export_station_part(db: sqlite3.Connection, part_id: object, station: object, *, attest) -> dict:
+    if not callable(attest):
+        raise ValueError('expected an attest callable')
+    part_id = require_identifier(part_id, 'part number')
+    station = require_identifier(station, 'station')
+    part = read_original_part(db, part_id)
+    if part is None:
+        raise HistoryNotFound(part_id)
+    rows = tuple(
+        StationPartRow(ordinal, fact)
+        for ordinal, fact in enumerate(part.facts)
+        if fact.station == station
+    )
+    if not rows:
+        raise ValueError(f'part {part_id} has no rows for station {station}')
+    draft = StationPart(
+        station_part_number(part.part_id, station), part.part_id, part.publication_id,
+        part.position, station, rows, original_digest(part), '',
+    )
+    token = attest(station_part_payload(draft))
+    if type(token) is not str or not token:
+        raise ValueError('attest must return a nonempty token')
+    return station_part_fields(replace(draft, token=token))

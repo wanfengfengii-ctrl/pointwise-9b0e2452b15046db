@@ -2,7 +2,7 @@ import sqlite3
 
 from lake.audit.requests import RequestConflict, check_request
 from lake.mirror.evidence import read_known_fact
-from lake.release.formats import Document, PublicationPart, encode_document
+from lake.release.formats import Document, encode_document
 
 
 class DocumentConflict(RequestConflict):
@@ -18,8 +18,8 @@ def classify_document(db: sqlite3.Connection, document: Document) -> tuple[str, 
     return content, previous
 
 
-def validate_fact_consistency(db: sqlite3.Connection, part: PublicationPart) -> None:
-    for fact in part.facts:
+def validate_fact_consistency(db: sqlite3.Connection, facts) -> None:
+    for fact in facts:
         known = read_known_fact(db, fact.fact_id)
         if known is not None and known != fact:
             raise DocumentConflict(f'conflicting fields for frozen fact {fact.fact_id}')
